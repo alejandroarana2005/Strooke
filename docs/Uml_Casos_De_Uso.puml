@@ -1,0 +1,100 @@
+@startuml Casos_de_Uso_Strooke
+
+skinparam actorStyle awesome
+skinparam packageStyle rectangle
+skinparam usecase {
+  BackgroundColor #F5F5F3
+  BorderColor #111111
+  ArrowColor #555555
+  ActorBorderColor #111111
+  ActorFontSize 12
+}
+skinparam defaultFontName Helvetica
+
+left to right direction
+
+actor "Cliente" as cliente
+actor "Administrador" as admin
+
+rectangle "Strooke — Plataforma Web" {
+
+  ' ── Autenticación ──────────────────────
+  package "Autenticación" {
+    usecase "Registrarse" as UC01
+    usecase "Iniciar sesión" as UC02
+    usecase "Recuperar contraseña" as UC03
+  }
+
+  ' ── Catálogo ───────────────────────────
+  package "Catálogo" {
+    usecase "Ver catálogo de gorras" as UC04
+    usecase "Buscar producto" as UC05
+    usecase "Filtrar por categoría" as UC06
+    usecase "Ver detalle de producto" as UC07
+  }
+
+  ' ── Compras ────────────────────────────
+  package "Compras" {
+    usecase "Agregar al carrito" as UC08
+    usecase "Gestionar carrito" as UC09
+    usecase "Realizar checkout" as UC10
+    usecase "Pagar con PSE" as UC11
+    usecase "Ver resultado del pago" as UC12
+  }
+
+  ' ── Pedidos y Perfil ───────────────────
+  package "Pedidos y Perfil" {
+    usecase "Ver historial de compras" as UC13
+    usecase "Rastrear estado del pedido" as UC14
+    usecase "Editar perfil" as UC15
+  }
+
+  ' ── Panel Administrador ────────────────
+  package "Panel Administrador" {
+    usecase "Gestionar productos" as UC16
+    usecase "Gestionar pedidos" as UC17
+    usecase "Actualizar estado de envío" as UC18
+    usecase "Ver estadísticas de ventas" as UC19
+    usecase "Controlar stock" as UC20
+  }
+
+}
+
+' ── Relaciones Cliente ─────────────────
+cliente --> UC01
+cliente --> UC02
+cliente --> UC03
+cliente --> UC04
+cliente --> UC05
+cliente --> UC06
+cliente --> UC07
+cliente --> UC08
+cliente --> UC09
+cliente --> UC10
+cliente --> UC11
+cliente --> UC12
+cliente --> UC13
+cliente --> UC14
+cliente --> UC15
+
+' ── Relaciones Administrador ───────────
+admin --> UC02
+admin --> UC03
+admin --> UC16
+admin --> UC17
+admin --> UC18
+admin --> UC19
+admin --> UC20
+
+' ── Relaciones include/extend ──────────
+UC05 .> UC04 : <<include>>
+UC06 .> UC04 : <<include>>
+UC07 .> UC04 : <<include>>
+UC09 .> UC08 : <<include>>
+UC10 .> UC09 : <<include>>
+UC11 .> UC10 : <<include>>
+UC12 .> UC11 : <<include>>
+UC18 .> UC17 : <<include>>
+UC20 .> UC16 : <<include>>
+
+@enduml

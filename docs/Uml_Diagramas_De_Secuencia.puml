@@ -1,0 +1,199 @@
+@startuml 
+
+' ══════════════════════════════════════
+' SECUENCIA 1 — LOGIN Y REGISTRO
+' ══════════════════════════════════════
+
+title Secuencia — Login y Registro
+
+skinparam sequenceArrowColor #555555
+skinparam sequenceLifeLineBorderColor #111111
+skinparam sequenceParticipantBackgroundColor #F5F5F3
+skinparam sequenceParticipantBorderColor #111111
+skinparam defaultFontName Helvetica
+skinparam noteBorderColor #DDDDDD
+skinparam noteBackgroundColor #FFFFFF
+
+title Secuencia — Login y Registro
+
+actor "Usuario" as U
+participant "React\n(Frontend)" as FE
+participant "Express\n(Backend)" as BE
+database "MySQL\n(BD)" as DB
+
+== Registro ==
+
+U -> FE : Completa formulario\n(nombre, correo, contraseña)
+FE -> FE : Valida campos\nen el formulario
+FE -> BE : POST /api/auth/register
+BE -> DB : SELECT * FROM usuarios\nWHERE correo = ?
+DB --> BE : Resultado
+alt Correo ya registrado
+  BE --> FE : 400 — Correo ya existe
+  FE --> U : Muestra error\nen el formulario
+else Correo disponible
+  BE -> BE : Hash contraseña\ncon bcrypt
+  BE -> DB : INSERT INTO usuarios
+  DB --> BE : Usuario creado
+  BE --> FE : 201 — Registro exitoso
+  FE --> U : Redirige al Login\n+ mensaje de confirmación
+end
+
+== Login ==
+
+U -> FE : Ingresa correo\ny contraseña
+FE -> BE : POST /api/auth/login
+BE -> DB : SELECT * FROM usuarios\nWHERE correo = ?
+DB --> BE : Datos del usuario
+alt Usuario no encontrado
+  BE --> FE : 401 — Credenciales incorrectas
+  FE --> U : Muestra error
+else Usuario encontrado
+  BE -> BE : Compara contraseña\ncon bcrypt
+  alt Contraseña incorrecta
+    BE --> FE : 401 — Credenciales incorrectas
+    FE --> U : Muestra error\n(intento N de 5)
+  else Contraseña correcta
+    BE -> BE : Genera JWT token
+    BE --> FE : 200 — JWT token + rol
+    alt rol = cliente
+      FE --> U : Redirige al Catálogo
+    else rol = admin
+      FE --> U : Redirige al Panel Admin
+    end
+  end
+end
+
+newpage
+
+' ══════════════════════════════════════
+' SECUENCIA 2 — COMPRA CON PSE
+' ══════════════════════════════════════
+
+title Secuencia — Compra con PSE
+
+skinparam sequenceArrowColor #555555
+skinparam sequenceLifeLineBorderColor #111111
+skinparam sequenceParticipantBackgroundColor #F5F5F3
+skinparam sequenceParticipantBorderColor #111111
+skinparam defaultFontName Helvetica
+skinparam noteBorderColor #DDDDDD
+skinparam noteBackgroundColor #FFFFFF
+
+title Secuencia — Compra con PSE
+
+actor "Usuario" as U
+participant "React\n(Frontend)" as FE
+participant "Express\n(Backend)" as BE
+database "MySQL\n(BD)" as DB
+participant "PSE\n(Externo)" as PSE
+participant "Nodemailer" as NM
+
+== Checkout ==
+
+U -> FE : Revisa carrito\ny procede al pago
+FE --> U : Muestra formulario\nde checkout
+U -> FE : Completa dirección\ny selecciona banco PSE
+FE -> FE : Valida campos\ndel formulario
+alt Campos incompletos
+  FE --> U : Resalta campos\ncon error
+else Datos completos
+  FE -> BE : POST /api/pedidos\n(productos, dirección, banco)
+  BE -> DB : INSERT INTO pedidos\n(estado = pendiente)
+  DB --> BE : Pedido creado\n(numeroPedido generado)
+  BE -> PSE : Solicita URL de pago\n(monto, banco, referencia)
+  PSE --> BE : URL del portal del banco
+  BE --> FE : URL de redirección + numeroPedido
+  FE --> U : Redirige al\nportal del banco
+end
+
+== Pago en el Banco ==
+
+U -> PSE : Autoriza el pago\nen el portal del banco
+PSE -> BE : Webhook — resultado\n(exitoso / pendiente / rechazado)
+
+== Resultado ==
+
+alt Pago exitoso
+  BE -> DB : UPDATE pedidos\nSET estado = en_preparacion
+  BE -> DB : UPDATE productos\nSET stock = stock - cantidad
+  BE -> DB : INSERT INTO historial_envio
+  BE -> NM : Enviar correo\nde confirmación
+  NM --> U : Correo — Compra exitosa\n+ número de pedido
+  BE --> FE : 200 — Pago aprobado
+  FE --> U : Pantalla — Compra exitosa\n+ número de pedido
+else Pago pendiente
+  BE -> DB : UPDATE pedidos\nSET estado = pendiente
+  BE -> NM : Enviar correo\n"Pago en proceso"
+  NM --> U : Correo — Pago en proceso
+  BE --> FE : 200 — Pago pendiente
+  FE --> U : Pantalla — Pago en proceso
+else Pago rechazado
+  BE -> DB : DELETE pedido\n(o SET estado = cancelado)
+  BE --> FE : 200 — Pago rechazado
+  FE --> U : Pantalla — Pago rechazado\n+ botón reintentar
+end
+
+newpage
+
+' ══════════════════════════════════════
+' SECUENCIA 3 — SEGUIMIENTO DE PEDIDO
+' ══════════════════════════════════════
+
+title Secuencia — Seguimiento de Pedido
+
+skinparam sequenceArrowColor #555555
+skinparam sequenceLifeLineBorderColor #111111
+skinparam sequenceParticipantBackgroundColor #F5F5F3
+skinparam sequenceParticipantBorderColor #111111
+skinparam defaultFontName Helvetica
+skinparam noteBorderColor #DDDDDD
+skinparam noteBackgroundColor #FFFFFF
+
+title Secuencia — Seguimiento de Pedido
+
+actor "Cliente" as C
+actor "Administrador" as A
+participant "React\n(Frontend)" as FE
+participant "Express\n(Backend)" as BE
+database "MySQL\n(BD)" as DB
+participant "Nodemailer" as NM
+
+== Cliente consulta su pedido ==
+
+C -> FE : Entra a Perfil\n/ Mis Pedidos
+FE -> BE : GET /api/pedidos/mis-pedidos
+BE -> DB : SELECT * FROM pedidos\nWHERE usuarioId = ?
+DB --> BE : Lista de pedidos
+BE --> FE : 200 — Pedidos del usuario
+FE --> C : Muestra historial\nde compras
+
+C -> FE : Selecciona un pedido
+FE -> BE : GET /api/pedidos/:id/estado
+BE -> DB : SELECT * FROM historial_envio\nWHERE pedidoId = ?
+DB --> BE : Historial de estados
+BE --> FE : 200 — Estados + fechas
+FE --> C : Muestra línea de tiempo\ndel pedido
+
+== Administrador actualiza el estado ==
+
+A -> FE : Entra al panel\nde pedidos
+FE -> BE : GET /api/admin/pedidos
+BE -> DB : SELECT * FROM pedidos
+DB --> BE : Lista completa de pedidos
+BE --> FE : 200 — Todos los pedidos
+FE --> A : Muestra lista\ncon filtros
+
+A -> FE : Selecciona pedido\ny cambia estado
+FE -> BE : PATCH /api/admin/pedidos/:id/estado\n(nuevoEstado)
+BE -> DB : UPDATE pedidos\nSET estado = nuevoEstado
+BE -> DB : INSERT INTO historial_envio\n(estado, fecha)
+DB --> BE : Cambio confirmado
+BE -> NM : Enviar correo\nde notificación al cliente
+NM --> C : Correo — Estado actualizado
+BE --> FE : 200 — Estado actualizado
+FE --> A : Mensaje de éxito
+
+
+
+@enduml
