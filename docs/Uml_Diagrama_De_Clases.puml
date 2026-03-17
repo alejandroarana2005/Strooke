@@ -1,0 +1,107 @@
+@startuml Diagrama_de_Clases_Strooke
+
+skinparam classBackgroundColor #F5F5F3
+skinparam classBorderColor #111111
+skinparam arrowColor #555555
+skinparam classArrowFontSize 10
+skinparam defaultFontName Helvetica
+skinparam classFontSize 12
+skinparam classAttributeFontSize 10
+
+class Usuario {
+  +id: INT
+  +nombre: VARCHAR
+  +correo: VARCHAR
+  +passwordHash: VARCHAR
+  +rol: ENUM (cliente, admin)
+  +telefono: VARCHAR
+  +direccion: TEXT
+  +resetToken: VARCHAR
+  +createdAt: TIMESTAMP
+  --
+  +login()
+  +registro()
+  +recuperarPassword()
+  +editarPerfil()
+}
+
+class Producto {
+  +id: INT
+  +nombre: VARCHAR
+  +descripcion: TEXT
+  +precio: DECIMAL
+  +stock: INT
+  +imagenUrl: VARCHAR
+  +activo: BOOLEAN
+  +createdAt: TIMESTAMP
+  --
+  +crear()
+  +editar()
+  +eliminar()
+  +actualizarStock()
+}
+
+class Categoria {
+  +id: INT
+  +nombre: VARCHAR
+  +descripcion: TEXT
+  --
+  +listar()
+}
+
+class Pedido {
+  +id: INT
+  +numeroPedido: VARCHAR
+  +estado: ENUM
+  +direccionEnvio: TEXT
+  +metodoPago: VARCHAR
+  +total: DECIMAL
+  +numeroGuia: VARCHAR
+  +createdAt: TIMESTAMP
+  --
+  +crear()
+  +cambiarEstado()
+  +generarNumero()
+  +generarGuia()
+}
+
+class DetallePedido {
+  +id: INT
+  +cantidad: INT
+  +precioUnitario: DECIMAL
+  +subtotal: DECIMAL
+  --
+  +calcularSubtotal()
+}
+
+class HistorialEnvio {
+  +id: INT
+  +estado: VARCHAR
+  +descripcion: TEXT
+  +fecha: TIMESTAMP
+  --
+  +registrar()
+}
+
+class Notificacion {
+  +id: INT
+  +tipo: VARCHAR
+  +destinatario: VARCHAR
+  +asunto: VARCHAR
+  +contenido: TEXT
+  +enviadoEn: TIMESTAMP
+  --
+  +enviar()
+  +generarPlantilla()
+}
+
+' ── Relaciones ─────────────────────────
+
+Usuario "1" --o{ "0..*" Pedido : realiza
+Pedido "1" --o{ "1..*" DetallePedido : contiene
+Producto "1" --o{ "0..*" DetallePedido : incluido en
+Categoria "1" --o{ "0..*" Producto : agrupa
+Pedido "1" --o{ "1..*" HistorialEnvio : registra
+Pedido "1" --o{ "0..*" Notificacion : genera
+
+@enduml
