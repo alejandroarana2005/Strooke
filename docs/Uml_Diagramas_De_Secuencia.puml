@@ -1,4 +1,4 @@
-@startuml 
+@startuml Diagrama_De_Secuencias
 
 ' ══════════════════════════════════════
 ' SECUENCIA 1 — LOGIN Y REGISTRO
