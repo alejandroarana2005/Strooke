@@ -13,4 +13,4 @@ El sistema permitirá la gestión integral de usuarios, productos, pedidos y env
 | Alejandro Arana Fernandez | 2220232039 | Project Manager | Hacer todo xd |
 | Sergio Martinez | 2220231060 | Front-end developer | Desarrollar vistas de los distintos usuarios |
 | Jhoan Ortiz | 2220232039 | Back end developer | Hacer nada xd |
-| Juan Miguel Robayo | xxx | Product Owner | Ser juanmi |
+| Juan Miguel Robayo | 2220232004 | Product Owner | Entrevista |
