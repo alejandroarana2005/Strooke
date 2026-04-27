@@ -8,7 +8,8 @@ import PrivateRoute from './components/PrivateRoute';
 import Home from './pages/Home';
 import Catalog from './pages/Catalog';
 import ProductDetail from './pages/ProductDetail';
-import Auth from './pages/Auth';
+import Login from './pages/Auth';
+import Register from './pages/Register';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 
@@ -30,7 +31,8 @@ const App = () => {
             <Route path="/" element={<Layout><Home /></Layout>} />
             <Route path="/catalogo" element={<Layout><Catalog /></Layout>} />
             <Route path="/producto/:id" element={<Layout><ProductDetail /></Layout>} />
-            <Route path="/auth" element={<Auth />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route

@@ -6,11 +6,11 @@ import axios from 'axios';
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
-const Login = () => {
+const Register = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
 
-  const [form, setForm] = useState({ correo: '', password: '' });
+  const [form, setForm] = useState({ nombre: '', correo: '', password: '' });
   const [showPassword, setShowPassword] = useState(false);
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState('');
@@ -20,11 +20,11 @@ const Login = () => {
     setError('');
     setCargando(true);
     try {
-      const { data } = await axios.post(`${API}/api/auth/login`, form);
+      const { data } = await axios.post(`${API}/api/auth/register`, form);
       login(data.token, data.usuario);
       navigate('/');
     } catch (err) {
-      setError(err.response?.data?.error || 'Error al iniciar sesión');
+      setError(err.response?.data?.error || 'Error al registrarse');
     } finally {
       setCargando(false);
     }
@@ -35,11 +35,24 @@ const Login = () => {
       <div className="w-full max-w-md bg-white shadow-sm overflow-hidden">
         <div className="bg-[#111] text-white p-8 text-center">
           <h2 className="text-xl font-bold tracking-[0.3em] uppercase">STROOKE</h2>
-          <p className="text-xs tracking-wider text-gray-400 mt-1 uppercase">Iniciar Sesión</p>
+          <p className="text-xs tracking-wider text-gray-400 mt-1 uppercase">Crear Cuenta</p>
         </div>
 
         <form onSubmit={handleSubmit} className="p-8 space-y-4">
           {error && <p className="text-xs text-red-600 tracking-wider">{error}</p>}
+
+          <div>
+            <label className="text-xs tracking-wider uppercase text-gray-600 block mb-2">
+              Nombre completo
+            </label>
+            <input
+              type="text"
+              required
+              value={form.nombre}
+              onChange={(e) => setForm((p) => ({ ...p, nombre: e.target.value }))}
+              className="w-full border border-gray-300 px-4 py-3 text-sm focus:outline-none focus:border-black transition-colors"
+            />
+          </div>
 
           <div>
             <label className="text-xs tracking-wider uppercase text-gray-600 block mb-2">
@@ -61,6 +74,7 @@ const Login = () => {
             <input
               type={showPassword ? 'text' : 'password'}
               required
+              minLength={6}
               value={form.password}
               onChange={(e) => setForm((p) => ({ ...p, password: e.target.value }))}
               className="w-full border border-gray-300 px-4 py-3 pr-12 text-sm focus:outline-none focus:border-black transition-colors"
@@ -74,24 +88,18 @@ const Login = () => {
             </button>
           </div>
 
-          <div className="text-right">
-            <Link to="/forgot-password" className="text-xs text-gray-500 hover:text-black tracking-wider">
-              ¿Olvidaste tu contraseña?
-            </Link>
-          </div>
-
           <button
             type="submit"
             disabled={cargando}
-            className="w-full bg-black text-white py-3 text-xs tracking-widest uppercase hover:bg-gray-900 transition-colors disabled:opacity-60"
+            className="w-full bg-black text-white py-3 text-xs tracking-widest uppercase hover:bg-gray-900 transition-colors disabled:opacity-60 mt-2"
           >
-            {cargando ? 'Cargando...' : 'Iniciar Sesión'}
+            {cargando ? 'Cargando...' : 'Crear Cuenta'}
           </button>
 
           <p className="text-xs text-center text-gray-500 tracking-wider">
-            ¿No tienes cuenta?{' '}
-            <Link to="/register" className="underline hover:text-black">
-              Regístrate
+            ¿Ya tienes cuenta?{' '}
+            <Link to="/login" className="underline hover:text-black">
+              Inicia sesión
             </Link>
           </p>
         </form>
@@ -100,4 +108,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default Register;

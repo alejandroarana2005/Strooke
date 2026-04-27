@@ -130,7 +130,7 @@ const ResetPassword = () => {
               </button>
 
               <p className="text-center">
-                <Link to="/auth" className="text-xs text-gray-500 tracking-wider hover:text-black">
+                <Link to="/login" className="text-xs text-gray-500 tracking-wider hover:text-black">
                   Volver al inicio de sesión
                 </Link>
               </p>

@@ -48,7 +48,7 @@ const ForgotPassword = () => {
                 instrucciones pronto.
               </p>
               <Link
-                to="/auth"
+                to="/login"
                 className="inline-block text-xs tracking-widest uppercase underline hover:opacity-70 mt-2"
               >
                 Volver al inicio de sesión
@@ -84,7 +84,7 @@ const ForgotPassword = () => {
               </button>
               <p className="text-center">
                 <Link
-                  to="/auth"
+                  to="/login"
                   className="text-xs text-gray-500 tracking-wider hover:text-black"
                 >
                   Volver al inicio de sesión

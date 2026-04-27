@@ -44,7 +44,7 @@ const Footer = () => {
           </h4>
           <ul className="space-y-3 text-sm text-gray-400">
             <li>
-              <Link to="/auth" className="hover:text-white transition-colors">
+              <Link to="/login" className="hover:text-white transition-colors">
                 Iniciar Sesión
               </Link>
             </li>

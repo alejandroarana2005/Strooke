@@ -95,14 +95,14 @@ const Navbar = () => {
                   ) : (
                     <>
                       <Link
-                        to="/auth"
+                        to="/login"
                         onClick={() => setUserMenuOpen(false)}
                         className="block px-4 py-2 text-xs tracking-wider hover:bg-gray-50 uppercase"
                       >
                         Iniciar Sesión
                       </Link>
                       <Link
-                        to="/auth"
+                        to="/register"
                         onClick={() => setUserMenuOpen(false)}
                         className="block px-4 py-2 text-xs tracking-wider hover:bg-gray-50 uppercase"
                       >
@@ -134,7 +134,7 @@ const Navbar = () => {
             <Link to="/catalogo" onClick={() => setMenuOpen(false)}>Nuevos</Link>
             <Link to="/catalogo" onClick={() => setMenuOpen(false)}>Catálogo</Link>
             <Link to="/catalogo?categoria=sale" onClick={() => setMenuOpen(false)}>Sale</Link>
-            <Link to={usuario ? '/perfil' : '/auth'} onClick={() => setMenuOpen(false)}>
+            <Link to={usuario ? '/perfil' : '/login'} onClick={() => setMenuOpen(false)}>
               {usuario ? 'Mi Cuenta' : 'Iniciar Sesión'}
             </Link>
           </div>

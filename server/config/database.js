@@ -1,7 +1,15 @@
+// importar Sequelize y configurar conexión a la base de datos MySQL utilizando
+//  variables de entorno (.env) para mayor seguridad y flexibilidad
+
 const { Sequelize } = require('sequelize');
 require('dotenv').config();
 
+// Crear instancia de Sequelize con configuración de conexión a MySQL
+
 const sequelize = new Sequelize(
+
+  // Utilizar variables de entorno para configurar la conexión a la base de datos
+  
   process.env.DB_NAME,
   process.env.DB_USER,
   process.env.DB_PASSWORD,

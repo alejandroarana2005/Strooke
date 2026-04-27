@@ -45,12 +45,8 @@ const seed = async () => {
         categoria_id: urbanas.id,
       },
       {
-        nombre: 'Running Cap Pro',
-        descripcion: 'Gorra técnica ultraligera para running con paneles de ventilación y protección UV.',
-        precio: 85000,
-        stock: 18,
-        imagen_url: 'https://images.unsplash.com/photo-1533827432537-70133748f5c8?w=500&auto=format',
-        categoria_id: deportivas.id,
+        
+        
       },
       {
         nombre: 'Trail Flex Cap',
