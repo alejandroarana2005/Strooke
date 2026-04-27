@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
+import GoogleAuthButton from '../components/GoogleAuthButton';
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
@@ -87,6 +88,17 @@ const Login = () => {
           >
             {cargando ? 'Cargando...' : 'Iniciar Sesión'}
           </button>
+
+          <div className="flex items-center gap-3 my-1">
+            <hr className="flex-1 border-gray-200" />
+            <span className="text-xs text-gray-400 tracking-wider">O</span>
+            <hr className="flex-1 border-gray-200" />
+          </div>
+
+          <GoogleAuthButton
+            label="Continuar con Google"
+            onError={(msg) => setError(msg)}
+          />
 
           <p className="text-xs text-center text-gray-500 tracking-wider">
             ¿No tienes cuenta?{' '}

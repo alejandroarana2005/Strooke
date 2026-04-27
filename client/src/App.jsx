@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { GoogleOAuthProvider } from '@react-oauth/google';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import Navbar from './components/Navbar';
@@ -24,6 +25,7 @@ const Layout = ({ children }) => (
 
 const App = () => {
   return (
+    <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
     <BrowserRouter>
       <AuthProvider>
         <CartProvider>
@@ -51,6 +53,7 @@ const App = () => {
         </CartProvider>
       </AuthProvider>
     </BrowserRouter>
+    </GoogleOAuthProvider>
   );
 };
 

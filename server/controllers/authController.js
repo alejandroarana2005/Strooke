@@ -196,4 +196,70 @@ const resetPassword = async (req, res) => {
   }
 };
 
-module.exports = { register, login, forgotPassword, resetPassword };
+const https = require('https');
+
+const googleAuth = async (req, res) => {
+  try {
+    const { accessToken } = req.body;
+
+    if (!accessToken) {
+      return res.status(400).json({ error: 'Access token de Google requerido' });
+    }
+
+    // Verificar el access token obteniendo la info del usuario en Google
+    const googleUser = await new Promise((resolve, reject) => {
+      https.get(
+        `https://www.googleapis.com/oauth2/v3/userinfo`,
+        { headers: { Authorization: `Bearer ${accessToken}` } },
+        (response) => {
+          let data = '';
+          response.on('data', (chunk) => { data += chunk; });
+          response.on('end', () => {
+            if (response.statusCode !== 200) return reject(new Error('Token inválido'));
+            resolve(JSON.parse(data));
+          });
+        }
+      ).on('error', reject);
+    });
+
+    const { email, name, sub: googleId } = googleUser;
+
+    if (!email) {
+      return res.status(401).json({ error: 'No se pudo obtener el correo de Google' });
+    }
+
+    // Buscar o crear el usuario
+    let usuario = await Usuario.findOne({ where: { correo: email } });
+
+    if (!usuario) {
+      usuario = await Usuario.create({
+        nombre: name,
+        correo: email,
+        password_hash: await bcrypt.hash(googleId + process.env.JWT_SECRET, 10),
+        rol: 'cliente',
+      });
+    }
+
+    const jwtToken = jwt.sign(
+      { id: usuario.id, correo: usuario.correo, rol: usuario.rol },
+      process.env.JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    return res.json({
+      message: 'Autenticación con Google exitosa',
+      token: jwtToken,
+      usuario: {
+        id: usuario.id,
+        nombre: usuario.nombre,
+        correo: usuario.correo,
+        rol: usuario.rol,
+      },
+    });
+  } catch (err) {
+    console.error(err);
+    return res.status(401).json({ error: 'Token de Google inválido' });
+  }
+};
+
+module.exports = { register, login, forgotPassword, resetPassword, googleAuth };
