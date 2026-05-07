@@ -4,7 +4,7 @@
 const { Sequelize } = require('sequelize');
 require('dotenv').config();
 
-// Crear instancia de Sequelize con configuración de conexión a MySQL
+// Crea una unica instancia de Sequelize con configuración de conexión a MySQL
 
 const sequelize = new Sequelize(
 
