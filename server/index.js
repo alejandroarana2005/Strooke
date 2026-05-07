@@ -7,6 +7,7 @@ const { sequelize } = require('./models');
 const authRoutes = require('./routes/authRoutes');
 const productosRoutes = require('./routes/productosRoutes');
 const categoriasRoutes = require('./routes/categoriasRoutes');
+const pedidosRoutes = require('./routes/pedidosRoutes');
 
 // Configuración del servidor
 const app = express();
@@ -28,6 +29,7 @@ app.get('/', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/productos', productosRoutes);
 app.use('/api/categorias', categoriasRoutes);
+app.use('/api/pedidos', pedidosRoutes);
 
 // verificar conexión a la base de datos y sincronizar modelos antes de iniciar el servidor
 sequelize
