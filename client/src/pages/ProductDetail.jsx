@@ -20,7 +20,7 @@ const formatCOP = (price) =>
 const ProductDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { addItem } = useCart();
+  const { agregarProducto } = useCart();
 
   const [producto, setProducto] = useState(null);
   const [relacionados, setRelacionados] = useState([]);
@@ -45,13 +45,13 @@ const ProductDetail = () => {
 
   const handleAddToCart = () => {
     if (!producto || producto.stock === 0) return;
-    addItem({
+    agregarProducto({
       id: producto.id,
       nombre: producto.nombre,
       precio: Number(producto.precio),
       imagen_url: producto.imagen_url,
-      talla: tallaSeleccionada,
       cantidad,
+      stock: producto.stock,
     });
     setAgregado(true);
     setTimeout(() => setAgregado(false), 2000);

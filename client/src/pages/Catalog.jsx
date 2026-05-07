@@ -18,7 +18,9 @@ const Catalog = () => {
 
   useEffect(() => {
     const cat = searchParams.get('categoria');
+    const q = searchParams.get('busqueda');
     if (cat) setFiltro(cat.toUpperCase());
+    if (q) setBusqueda(q);
   }, [searchParams]);
 
   useEffect(() => {

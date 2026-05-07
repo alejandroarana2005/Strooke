@@ -1,62 +1,79 @@
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 
 const CartContext = createContext(null);
 
+const STORAGE_KEY = 'strooke_carrito';
+
 export const CartProvider = ({ children }) => {
-  const [items, setItems] = useState([]);
+  const [items, setItems] = useState(() => {
+    try {
+      const guardado = localStorage.getItem(STORAGE_KEY);
+      return guardado ? JSON.parse(guardado) : [];
+    } catch {
+      return [];
+    }
+  });
   const [isOpen, setIsOpen] = useState(false);
 
-  const addItem = (producto) => {
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+  }, [items]);
+
+  const agregarProducto = useCallback(({ id, nombre, precio, imagen_url, cantidad = 1, stock }) => {
     setItems((prev) => {
-      const existing = prev.find(
-        (i) => i.id === producto.id && i.talla === producto.talla
-      );
-      if (existing) {
+      const existente = prev.find((i) => i.id === id);
+      if (existente) {
+        const nuevaCantidad = existente.cantidad + cantidad;
+        if (nuevaCantidad > stock) return prev;
         return prev.map((i) =>
-          i.id === producto.id && i.talla === producto.talla
-            ? { ...i, cantidad: i.cantidad + producto.cantidad }
-            : i
+          i.id === id ? { ...i, cantidad: nuevaCantidad } : i
         );
       }
-      return [...prev, producto];
+      if (cantidad > stock) return prev;
+      return [...prev, { id, nombre, precio, imagen_url, cantidad, stock }];
     });
     setIsOpen(true);
-  };
+  }, []);
 
-  const removeItem = (id, talla) => {
-    setItems((prev) => prev.filter((i) => !(i.id === id && i.talla === talla)));
-  };
+  const quitarProducto = useCallback((id) => {
+    setItems((prev) => prev.filter((i) => i.id !== id));
+  }, []);
 
-  const updateQuantity = (id, talla, cantidad) => {
-    if (cantidad <= 0) return removeItem(id, talla);
+  const modificarCantidad = useCallback((id, cantidad) => {
+    if (cantidad < 1) {
+      setItems((prev) => prev.filter((i) => i.id !== id));
+      return;
+    }
     setItems((prev) =>
       prev.map((i) =>
-        i.id === id && i.talla === talla ? { ...i, cantidad } : i
+        i.id === id ? { ...i, cantidad: Math.min(cantidad, i.stock) } : i
       )
     );
-  };
+  }, []);
 
-  const clearCart = () => setItems([]);
+  const vaciarCarrito = useCallback(() => setItems([]), []);
 
-  const getItemCount = () => items.reduce((sum, i) => sum + i.cantidad, 0);
-  const getSubtotal = () => items.reduce((sum, i) => sum + i.precio * i.cantidad, 0);
-  const getShipping = () => (getSubtotal() >= 150000 ? 0 : 8000);
-  const getTotal = () => getSubtotal() + getShipping();
+  const abrirCarrito = useCallback(() => setIsOpen(true), []);
+  const cerrarCarrito = useCallback(() => setIsOpen(false), []);
+
+  const cantidadTotal = items.reduce((acc, i) => acc + i.cantidad, 0);
+  const subtotal = items.reduce((acc, i) => acc + i.precio * i.cantidad, 0);
+  const total = subtotal;
 
   return (
     <CartContext.Provider
       value={{
         items,
         isOpen,
-        setIsOpen,
-        addItem,
-        removeItem,
-        updateQuantity,
-        clearCart,
-        getItemCount,
-        getSubtotal,
-        getShipping,
-        getTotal,
+        cantidadTotal,
+        subtotal,
+        total,
+        agregarProducto,
+        quitarProducto,
+        modificarCantidad,
+        vaciarCarrito,
+        abrirCarrito,
+        cerrarCarrito,
       }}
     >
       {children}

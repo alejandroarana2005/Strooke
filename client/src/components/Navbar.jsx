@@ -1,16 +1,36 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ShoppingBag, Search, User, Menu, X } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 
 const Navbar = () => {
-  const { getItemCount, setIsOpen } = useCart();
+  const { cantidadTotal, abrirCarrito } = useCart();
   const { usuario, logout } = useAuth();
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
-  const count = getItemCount();
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const searchInputRef = useRef(null);
+  const count = cantidadTotal;
+
+  useEffect(() => {
+    if (searchOpen) searchInputRef.current?.focus();
+  }, [searchOpen]);
+
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    if (!searchTerm.trim()) return;
+    navigate(`/catalogo?busqueda=${encodeURIComponent(searchTerm.trim())}`);
+    setSearchTerm('');
+    setSearchOpen(false);
+  };
+
+  const handleCloseSearch = () => {
+    setSearchOpen(false);
+    setSearchTerm('');
+  };
 
   const handleLogout = () => {
     logout();
@@ -49,9 +69,31 @@ const Navbar = () => {
 
           {/* Derecha: iconos */}
           <div className="flex items-center justify-end gap-5">
-            <button className="hover:opacity-70 transition-opacity hidden md:block">
-              <Search size={18} />
-            </button>
+            {/* Buscador expandible */}
+            <div className="hidden md:flex items-center">
+              {searchOpen ? (
+                <form onSubmit={handleSearchSubmit} className="flex items-center gap-2">
+                  <input
+                    ref={searchInputRef}
+                    type="text"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    placeholder="BUSCAR..."
+                    className="bg-transparent border-b border-white text-white text-xs tracking-wider uppercase placeholder:text-gray-400 focus:outline-none w-36 pb-1"
+                  />
+                  <button type="button" onClick={handleCloseSearch} className="hover:opacity-70 transition-opacity">
+                    <X size={16} />
+                  </button>
+                </form>
+              ) : (
+                <button
+                  onClick={() => setSearchOpen(true)}
+                  className="hover:opacity-70 transition-opacity"
+                >
+                  <Search size={18} />
+                </button>
+              )}
+            </div>
 
             {/* Menú usuario */}
             <div className="relative">
@@ -116,7 +158,7 @@ const Navbar = () => {
 
             <button
               className="relative hover:opacity-70 transition-opacity"
-              onClick={() => setIsOpen(true)}
+              onClick={abrirCarrito}
             >
               <ShoppingBag size={18} />
               {count > 0 && (
