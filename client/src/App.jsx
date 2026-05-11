@@ -15,6 +15,7 @@ import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import Checkout from './pages/Checkout';
 import ResultadoPago from './pages/ResultadoPago';
+import Seguimiento from './pages/Seguimiento';
 
 const Layout = ({ children }) => (
   <>
@@ -48,6 +49,14 @@ const App = () => {
               }
             />
             <Route path="/resultado-pago" element={<Layout><ResultadoPago /></Layout>} />
+            <Route
+              path="/seguimiento/:numero_pedido"
+              element={
+                <PrivateRoute>
+                  <Layout><Seguimiento /></Layout>
+                </PrivateRoute>
+              }
+            />
             <Route
               path="/perfil"
               element={
