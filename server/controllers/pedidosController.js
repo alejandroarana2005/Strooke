@@ -1,6 +1,9 @@
 const { Op } = require('sequelize');
 const { sequelize, Pedido, DetallePedido, Producto } = require('../models');
 
+const BACKEND_URL = process.env.BACKEND_URL || `http://localhost:${process.env.PORT || 3001}`;
+const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
+
 // T-064: genera ORD-YYYYMMDD-XXXX contando pedidos del día dentro de la transacción
 const generarNumeroPedido = async (transaction) => {
   const hoy = new Date();
@@ -18,7 +21,7 @@ const generarNumeroPedido = async (transaction) => {
   return `${prefijo}${String(cantidad + 1).padStart(4, '0')}`;
 };
 
-// POST /api/pedidos — T-063 + T-065
+// POST /api/pedidos — T-063 + T-065 + T-067
 const crearPedido = async (req, res) => {
   const { items, direccion_envio, metodo_pago } = req.body;
 
@@ -31,7 +34,6 @@ const crearPedido = async (req, res) => {
 
   const transaction = await sequelize.transaction();
   try {
-    // Validar productos y stock — con SELECT FOR UPDATE para evitar condiciones de carrera
     const lineas = [];
     let total = 0;
 
@@ -61,14 +63,11 @@ const crearPedido = async (req, res) => {
       const precio_unitario = Number(producto.precio);
       const subtotal = precio_unitario * item.cantidad;
       total += subtotal;
-
       lineas.push({ producto, cantidad: item.cantidad, precio_unitario, subtotal });
     }
 
-    // T-064: número de pedido único
     const numero_pedido = await generarNumeroPedido(transaction);
 
-    // Crear pedido
     const pedido = await Pedido.create(
       {
         numero_pedido,
@@ -80,7 +79,6 @@ const crearPedido = async (req, res) => {
       { transaction }
     );
 
-    // Crear detalles y reducir stock (T-065)
     const detalles = await DetallePedido.bulkCreate(
       lineas.map(({ producto, cantidad, precio_unitario, subtotal }) => ({
         pedido_id: pedido.id,
@@ -98,8 +96,12 @@ const crearPedido = async (req, res) => {
 
     await transaction.commit();
 
+    // T-067: URL de simulación PSE — arranca en estado "pending" para mayor realismo
+    const pse_url = `${BACKEND_URL}/api/pedidos/pse-callback?ref=${numero_pedido}&result=pending`;
+
     return res.status(201).json({
       mensaje: 'Pedido creado exitosamente',
+      pse_url,
       pedido: {
         id: pedido.id,
         numero_pedido: pedido.numero_pedido,
@@ -121,6 +123,62 @@ const crearPedido = async (req, res) => {
     await transaction.rollback();
     console.error('Error al crear pedido:', err);
     return res.status(500).json({ error: 'Error interno al procesar el pedido' });
+  }
+};
+
+// GET /api/pedidos/pse-callback — T-067: simula el retorno del banco PSE
+const pseCallback = async (req, res) => {
+  const { ref, result } = req.query;
+
+  const resultadosValidos = ['approved', 'pending', 'rejected'];
+  if (!ref || !resultadosValidos.includes(result)) {
+    return res.redirect(`${FRONTEND_URL}/resultado-pago?result=rejected`);
+  }
+
+  try {
+    const pedido = await Pedido.findOne({ where: { numero_pedido: ref } });
+
+    if (!pedido) {
+      return res.redirect(`${FRONTEND_URL}/resultado-pago?result=rejected`);
+    }
+
+    if (result === 'approved') {
+      await pedido.update({ estado: 'en_preparacion' });
+    } else if (result === 'rejected') {
+      // Restaurar stock dentro de una transacción
+      const transaction = await sequelize.transaction();
+      try {
+        await pedido.update({ estado: 'cancelado' }, { transaction });
+
+        const detalles = await DetallePedido.findAll({
+          where: { pedido_id: pedido.id },
+          transaction,
+        });
+
+        for (const detalle of detalles) {
+          await Producto.increment('stock', {
+            by: detalle.cantidad,
+            where: { id: detalle.producto_id },
+            transaction,
+          });
+        }
+
+        await transaction.commit();
+      } catch (err) {
+        await transaction.rollback();
+        console.error('Error restaurando stock en rechazo:', err);
+      }
+    }
+    // result === 'pending': no cambia el estado (ya está en 'pendiente')
+
+    const redirectUrl = new URL(`${FRONTEND_URL}/resultado-pago`);
+    redirectUrl.searchParams.set('result', result);
+    if (result !== 'rejected') redirectUrl.searchParams.set('ref', ref);
+
+    return res.redirect(redirectUrl.toString());
+  } catch (err) {
+    console.error('Error en pse-callback:', err);
+    return res.redirect(`${FRONTEND_URL}/resultado-pago?result=rejected`);
   }
 };
 
@@ -152,4 +210,4 @@ const getMisPedidos = async (req, res) => {
   }
 };
 
-module.exports = { crearPedido, getMisPedidos };
+module.exports = { crearPedido, pseCallback, getMisPedidos };

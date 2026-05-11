@@ -17,7 +17,8 @@ const Pedido = sequelize.define('Pedido', {
       'en_preparacion',
       'enviado',
       'en_camino',
-      'entregado'
+      'entregado',
+      'cancelado'
     ),
     defaultValue: 'pendiente',
     allowNull: false,
