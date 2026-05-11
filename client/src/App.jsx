@@ -13,6 +13,8 @@ import Login from './pages/Auth';
 import Register from './pages/Register';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
+import Checkout from './pages/Checkout';
+import ResultadoPago from './pages/ResultadoPago';
 
 const Layout = ({ children }) => (
   <>
@@ -37,6 +39,15 @@ const App = () => {
             <Route path="/register" element={<Register />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
+            <Route
+              path="/checkout"
+              element={
+                <PrivateRoute>
+                  <Layout><Checkout /></Layout>
+                </PrivateRoute>
+              }
+            />
+            <Route path="/resultado-pago" element={<Layout><ResultadoPago /></Layout>} />
             <Route
               path="/perfil"
               element={
