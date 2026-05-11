@@ -4,6 +4,7 @@ const Categoria = require('./Categoria');
 const Producto = require('./Producto');
 const Pedido = require('./Pedido');
 const DetallePedido = require('./DetallePedido');
+const HistorialEnvio = require('./HistorialEnvio');
 
 // Producto — Categoria
 Producto.belongsTo(Categoria, { foreignKey: 'categoria_id', as: 'categoria' });
@@ -21,4 +22,8 @@ DetallePedido.belongsTo(Pedido, { foreignKey: 'pedido_id', as: 'pedido' });
 DetallePedido.belongsTo(Producto, { foreignKey: 'producto_id', as: 'producto' });
 Producto.hasMany(DetallePedido, { foreignKey: 'producto_id', as: 'detalles_pedido' });
 
-module.exports = { sequelize, Usuario, Categoria, Producto, Pedido, DetallePedido };
+// HistorialEnvio — Pedido
+Pedido.hasMany(HistorialEnvio, { foreignKey: 'pedido_id', as: 'historial' });
+HistorialEnvio.belongsTo(Pedido, { foreignKey: 'pedido_id' });
+
+module.exports = { sequelize, Usuario, Categoria, Producto, Pedido, DetallePedido, HistorialEnvio };
