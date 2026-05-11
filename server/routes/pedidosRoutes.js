@@ -1,9 +1,18 @@
 const router = require('express').Router();
 const authMiddleware = require('../middleware/authMiddleware');
-const { crearPedido, pseCallback, getMisPedidos } = require('../controllers/pedidosController');
+const roleMiddleware = require('../middleware/roleMiddleware');
+const {
+  crearPedido,
+  pseCallback,
+  getEstadoPedido,
+  actualizarEstadoPedido,
+  getMisPedidos,
+} = require('../controllers/pedidosController');
 
-router.post('/', authMiddleware, crearPedido);
-router.get('/pse-callback', pseCallback);       // sin auth — simula retorno del banco
-router.get('/mis-pedidos', authMiddleware, getMisPedidos);
+router.post('/',                                authMiddleware,                         crearPedido);
+router.get('/pse-callback',                                                             pseCallback);
+router.get('/mis-pedidos',                      authMiddleware,                         getMisPedidos);
+router.get('/:numero_pedido/estado',            authMiddleware,                         getEstadoPedido);
+router.patch('/admin/:id/estado',               authMiddleware, roleMiddleware('admin'), actualizarEstadoPedido);
 
 module.exports = router;
