@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
@@ -9,7 +9,10 @@ const API = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 const Login = () => {
   const navigate = useNavigate();
+  const [params] = useSearchParams();
   const { login } = useAuth();
+
+  const sesionExpirada = params.get('expired') === '1';
 
   const [form, setForm] = useState({ correo: '', password: '' });
   const [showPassword, setShowPassword] = useState(false);
@@ -40,6 +43,11 @@ const Login = () => {
         </div>
 
         <form onSubmit={handleSubmit} className="p-8 space-y-4">
+          {sesionExpirada && !error && (
+            <p className="text-xs text-amber-700 tracking-wider bg-amber-50 border border-amber-200 px-3 py-2">
+              Tu sesión expiró. Por favor inicia sesión de nuevo.
+            </p>
+          )}
           {error && <p className="text-xs text-red-600 tracking-wider">{error}</p>}
 
           <div>

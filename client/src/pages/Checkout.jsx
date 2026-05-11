@@ -1,10 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../services/api';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
-
-const API = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 const FALLBACK_IMG =
   'https://images.unsplash.com/photo-1588850561407-ed78c282e89b?w=200&auto=format';
 
@@ -89,15 +87,11 @@ const Checkout = () => {
     setError('');
 
     try {
-      const { data } = await axios.post(
-        `${API}/api/pedidos`,
-        {
-          items: items.map((i) => ({ producto_id: i.id, cantidad: i.cantidad })),
-          direccion_envio: `${nombre.trim()} — ${direccion.trim()}, ${ciudad.trim()} — Tel: ${telefono.trim()}`,
-          metodo_pago: `PSE - ${banco}`,
-        },
-        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
-      );
+      const { data } = await api.post('/api/pedidos', {
+        items: items.map((i) => ({ producto_id: i.id, cantidad: i.cantidad })),
+        direccion_envio: `${nombre.trim()} — ${direccion.trim()}, ${ciudad.trim()} — Tel: ${telefono.trim()}`,
+        metodo_pago: `PSE - ${banco}`,
+      });
 
       setPedidoCreado(true);
       vaciarCarrito();
