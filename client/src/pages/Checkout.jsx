@@ -119,11 +119,15 @@ const Checkout = () => {
 
       // Cuando el widget cierra, navegar al resultado con el ID de transacción
       checkout.open((result) => {
+        console.log('Wompi callback result:', JSON.stringify(result));
+        const txnId = result?.transaction?.id;
+        console.log('Transaction ID:', txnId);
         setPedidoCreado(true);
         vaciarCarrito();
-        const txnId = result?.transaction?.id;
         if (txnId) {
           window.location.replace(`/resultado-pago?id=${txnId}`);
+        } else {
+          window.location.replace('/resultado-pago?result=pending');
         }
       });
 
