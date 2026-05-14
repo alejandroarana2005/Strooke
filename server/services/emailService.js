@@ -1,28 +1,16 @@
-const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
 
 const FRONTEND_URL = process.env.FRONTEND_URL || 'https://strooke.vercel.app';
 
-const getTransporter = () => {
-  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) return null;
-  return nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 587,
-    secure: false,
-    requireTLS: true,
-    tls: { rejectUnauthorized: false },
-    auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
-  });
-};
-
 // T-076
 const sendEmail = async ({ to, subject, html }) => {
-  const transporter = getTransporter();
-  if (!transporter) {
-    console.warn('⚠️  EMAIL_USER o EMAIL_PASS no configurados — correo omitido');
+  if (!process.env.RESEND_API_KEY) {
+    console.warn('⚠️  RESEND_API_KEY no configurada — correo omitido');
     return;
   }
-  await transporter.sendMail({
-    from: `"Strooke" <${process.env.EMAIL_USER}>`,
+  const resend = new Resend(process.env.RESEND_API_KEY);
+  await resend.emails.send({
+    from: 'Strooke <onboarding@resend.dev>',
     to,
     subject,
     html,
