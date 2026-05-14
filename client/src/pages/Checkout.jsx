@@ -92,6 +92,7 @@ const Checkout = () => {
 
       // 3. Abrir widget de Wompi
       setEnviando(false);
+      console.log('Public key:', import.meta.env.VITE_WOMPI_PUBLIC_KEY);
 
       const checkout = new window.WidgetCheckout({
         currency: 'COP',
