@@ -17,6 +17,10 @@ import Checkout from './pages/Checkout';
 import ResultadoPago from './pages/ResultadoPago';
 import Seguimiento from './pages/Seguimiento';
 import Perfil from './pages/Perfil';
+import AdminLayout from './pages/admin/AdminLayout';
+import AdminDashboard from './pages/admin/AdminDashboard';
+import AdminProductos from './pages/admin/AdminProductos';
+import AdminPedidos from './pages/admin/AdminPedidos';
 
 const Layout = ({ children }) => (
   <>
@@ -66,6 +70,18 @@ const App = () => {
                 </PrivateRoute>
               }
             />
+            <Route
+              path="/admin"
+              element={
+                <PrivateRoute adminOnly>
+                  <AdminLayout />
+                </PrivateRoute>
+              }
+            >
+              <Route index element={<AdminDashboard />} />
+              <Route path="productos" element={<AdminProductos />} />
+              <Route path="pedidos" element={<AdminPedidos />} />
+            </Route>
           </Routes>
         </CartProvider>
       </AuthProvider>
