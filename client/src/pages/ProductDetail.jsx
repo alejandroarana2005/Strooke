@@ -5,7 +5,7 @@ import axios from 'axios';
 import { useCart } from '../context/CartContext';
 import ProductCard from '../components/ProductCard';
 
-const API = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+const API = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 const TALLAS = ['S', 'M', 'L', 'XL'];
 const FALLBACK_IMG =
   'https://images.unsplash.com/photo-1588850561407-ed78c282e89b?w=600&auto=format';
@@ -33,7 +33,7 @@ const ProductDetail = () => {
     setCargando(true);
     setRelacionados([]);
     axios
-      .get(`${API}/api/productos/${id}`)
+      .get(`${API}/productos/${id}`)
       .then((res) => {
         const { relacionados: rel, ...prod } = res.data;
         setProducto(prod);

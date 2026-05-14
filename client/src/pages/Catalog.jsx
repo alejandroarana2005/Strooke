@@ -4,7 +4,7 @@ import { Search, ChevronDown } from 'lucide-react';
 import axios from 'axios';
 import ProductCard from '../components/ProductCard';
 
-const API = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+const API = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 const FILTROS = ['TODOS', 'URBANAS', 'DEPORTIVAS', 'PERSONALIZADAS'];
 
 const Catalog = () => {
@@ -31,7 +31,7 @@ const Catalog = () => {
     params.append('limit', '20');
 
     axios
-      .get(`${API}/api/productos?${params}`)
+      .get(`${API}/productos?${params}`)
       .then((res) => {
         let prods = res.data.productos || [];
         if (orden === 'precio-asc') prods = [...prods].sort((a, b) => a.precio - b.precio);

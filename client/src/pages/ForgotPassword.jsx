@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 
-const API = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+const API = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
 const ForgotPassword = () => {
   const [correo, setCorreo] = useState('');
@@ -15,7 +15,7 @@ const ForgotPassword = () => {
     setError('');
     setCargando(true);
     try {
-      await axios.post(`${API}/api/auth/forgot-password`, { correo });
+      await axios.post(`${API}/auth/forgot-password`, { correo });
       setEnviado(true);
     } catch {
       setError('Error al procesar la solicitud');

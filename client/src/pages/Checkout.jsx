@@ -87,7 +87,7 @@ const Checkout = () => {
     setError('');
 
     try {
-      const { data } = await api.post('/api/pedidos', {
+      const { data } = await api.post('/pedidos', {
         items: items.map((i) => ({ producto_id: i.id, cantidad: i.cantidad })),
         direccion_envio: `${nombre.trim()} — ${direccion.trim()}, ${ciudad.trim()} — Tel: ${telefono.trim()}`,
         metodo_pago: `PSE - ${banco}`,

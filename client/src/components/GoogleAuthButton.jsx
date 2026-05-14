@@ -3,7 +3,7 @@ import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
-const API = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+const API = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
 const GoogleAuthButton = ({ label = 'Continuar con Google', onError }) => {
   const { login } = useAuth();
@@ -12,7 +12,7 @@ const GoogleAuthButton = ({ label = 'Continuar con Google', onError }) => {
   const handleGoogle = useGoogleLogin({
     onSuccess: async ({ access_token }) => {
       try {
-        const { data } = await axios.post(`${API}/api/auth/google`, {
+        const { data } = await axios.post(`${API}/auth/google`, {
           accessToken: access_token,
         });
         login(data.token, data.usuario);

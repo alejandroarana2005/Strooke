@@ -2,7 +2,9 @@
 //  variables de entorno (.env) para mayor seguridad y flexibilidad
 
 const { Sequelize } = require('sequelize');
-require('dotenv').config();
+if (process.env.NODE_ENV !== 'production') {
+  require('dotenv').config();
+}
 
 // Crea una unica instancia de Sequelize con configuración de conexión a MySQL
 

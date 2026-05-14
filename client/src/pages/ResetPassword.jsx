@@ -3,7 +3,7 @@ import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff } from 'lucide-react';
 import axios from 'axios';
 
-const API = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+const API = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
 const ResetPassword = () => {
   const [searchParams] = useSearchParams();
@@ -30,7 +30,7 @@ const ResetPassword = () => {
 
     setCargando(true);
     try {
-      await axios.post(`${API}/api/auth/reset-password`, { token, password });
+      await axios.post(`${API}/auth/reset-password`, { token, password });
       setExito(true);
       setTimeout(() => navigate('/auth'), 3000);
     } catch (err) {

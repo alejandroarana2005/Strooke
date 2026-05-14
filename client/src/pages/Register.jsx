@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
 import GoogleAuthButton from '../components/GoogleAuthButton';
 
-const API = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+const API = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
 const Register = () => {
   const navigate = useNavigate();
@@ -21,7 +21,7 @@ const Register = () => {
     setError('');
     setCargando(true);
     try {
-      const { data } = await axios.post(`${API}/api/auth/register`, form);
+      const { data } = await axios.post(`${API}/auth/register`, form);
       login(data.token, data.usuario);
       navigate('/');
     } catch (err) {

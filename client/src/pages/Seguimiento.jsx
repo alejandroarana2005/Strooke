@@ -23,7 +23,7 @@ const Seguimiento = () => {
 
   const fetchPedido = useCallback(async () => {
     try {
-      const { data } = await api.get(`/api/pedidos/${numero_pedido}/estado`);
+      const { data } = await api.get(`/pedidos/${numero_pedido}/estado`);
       setPedido(data);
       setError('');
     } catch (err) {
