@@ -9,10 +9,18 @@ const sendEmail = async ({ to, subject, html }) => {
     return;
   }
   const resend = new Resend(process.env.RESEND_API_KEY);
+
+  // Plan gratuito de Resend solo permite enviar al email registrado
+  const isProd = process.env.NODE_ENV === 'production';
+  const recipient = isProd ? process.env.EMAIL_USER : to;
+  const finalSubject = isProd && to !== process.env.EMAIL_USER
+    ? `[Para: ${to}] ${subject}`
+    : subject;
+
   await resend.emails.send({
     from: 'Strooke <onboarding@resend.dev>',
-    to,
-    subject,
+    to: recipient,
+    subject: finalSubject,
     html,
   });
 };
