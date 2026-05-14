@@ -16,6 +16,7 @@ import ResetPassword from './pages/ResetPassword';
 import Checkout from './pages/Checkout';
 import ResultadoPago from './pages/ResultadoPago';
 import Seguimiento from './pages/Seguimiento';
+import Perfil from './pages/Perfil';
 
 const Layout = ({ children }) => (
   <>
@@ -61,11 +62,7 @@ const App = () => {
               path="/perfil"
               element={
                 <PrivateRoute>
-                  <Layout>
-                    <div className="p-8 text-center text-sm tracking-wider">
-                      Perfil — próximamente (T-083)
-                    </div>
-                  </Layout>
+                  <Layout><Perfil /></Layout>
                 </PrivateRoute>
               }
             />
