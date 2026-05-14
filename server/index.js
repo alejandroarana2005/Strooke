@@ -12,6 +12,7 @@ const categoriasRoutes = require('./routes/categoriasRoutes');
 const pedidosRoutes = require('./routes/pedidosRoutes');
 const wompiRoutes = require('./routes/wompiRoutes');
 const webhookRoutes = require('./routes/webhookRoutes');
+const usuariosRoutes = require('./routes/usuariosRoutes');
 
 // Configuración del servidor
 const app = express();
@@ -36,6 +37,7 @@ app.use('/api/categorias', categoriasRoutes);
 app.use('/api/pedidos', pedidosRoutes);
 app.use('/api/wompi', wompiRoutes);
 app.use('/api/webhooks', webhookRoutes);
+app.use('/api/usuarios', usuariosRoutes);
 
 // verificar conexión a la base de datos y sincronizar modelos antes de iniciar el servidor
 sequelize
