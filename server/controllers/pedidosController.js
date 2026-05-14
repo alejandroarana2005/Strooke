@@ -1,5 +1,6 @@
 const { Op } = require('sequelize');
-const { sequelize, Pedido, DetallePedido, Producto, HistorialEnvio } = require('../models');
+const { sequelize, Pedido, DetallePedido, Producto, HistorialEnvio, Usuario } = require('../models');
+const { sendEmail, generarEmailConfirmacion, generarEmailEstado } = require('../services/emailService');
 
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
 
@@ -123,6 +124,26 @@ const crearPedido = async (req, res) => {
     );
 
     await transaction.commit();
+
+    // T-079: confirmación de compra — fire and forget
+    const lineasEmail = lineas.map(({ producto, cantidad, precio_unitario, subtotal }) => ({
+      nombre: producto.nombre,
+      imagen_url: producto.imagen_url,
+      cantidad,
+      precio_unitario,
+      subtotal,
+    }));
+    Promise.resolve()
+      .then(async () => {
+        const usuario = await Usuario.findByPk(req.usuario.id);
+        if (!usuario) return;
+        await sendEmail({
+          to: usuario.correo,
+          subject: `Confirmación de pedido ${pedido.numero_pedido} — Strooke`,
+          html: generarEmailConfirmacion({ usuario, pedido, detalles: lineasEmail }),
+        });
+      })
+      .catch((err) => console.error('Error enviando correo de confirmación:', err));
 
     return res.status(201).json({
       mensaje: 'Pedido creado exitosamente',
@@ -288,6 +309,23 @@ const actualizarEstadoPedido = async (req, res) => {
       include: [{ model: HistorialEnvio, as: 'historial' }],
       order: [[{ model: HistorialEnvio, as: 'historial' }, 'fecha', 'ASC']],
     });
+
+    // T-080: correo de cambio de estado — fire and forget
+    const ESTADOS_CON_CORREO = ['en_preparacion', 'enviado', 'en_camino', 'entregado'];
+    if (ESTADOS_CON_CORREO.includes(estado)) {
+      const snapshot = pedidoActualizado;
+      Promise.resolve()
+        .then(async () => {
+          const usuario = await Usuario.findByPk(pedido.usuario_id);
+          if (!usuario) return;
+          await sendEmail({
+            to: usuario.correo,
+            subject: `Actualización de tu pedido ${pedido.numero_pedido} — Strooke`,
+            html: generarEmailEstado({ usuario, pedido: snapshot, nuevoEstado: estado }),
+          });
+        })
+        .catch((err) => console.error('Error enviando correo de estado:', err));
+    }
 
     return res.json(pedidoActualizado);
   } catch (err) {
