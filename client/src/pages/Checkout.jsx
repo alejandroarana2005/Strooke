@@ -117,10 +117,14 @@ const Checkout = () => {
         },
       });
 
-      // Wompi redirige solo a redirectUrl — solo limpiamos el carrito aquí
-      checkout.open(() => {
+      // Cuando el widget cierra, navegar al resultado con el ID de transacción
+      checkout.open((result) => {
         setPedidoCreado(true);
         vaciarCarrito();
+        const txnId = result?.transaction?.id;
+        if (txnId) {
+          window.location.replace(`/resultado-pago?id=${txnId}`);
+        }
       });
 
     } catch (err) {
