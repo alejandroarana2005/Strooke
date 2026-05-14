@@ -6,15 +6,6 @@ import { useAuth } from '../context/AuthContext';
 const FALLBACK_IMG =
   'https://images.unsplash.com/photo-1588850561407-ed78c282e89b?w=200&auto=format';
 
-const BANCOS = [
-  'Bancolombia',
-  'Davivienda',
-  'BBVA',
-  'Banco de Bogotá',
-  'Nequi',
-  'Daviplata',
-];
-
 const formatCOP = (n) =>
   new Intl.NumberFormat('es-CO', {
     style: 'currency',
@@ -44,7 +35,6 @@ const Checkout = () => {
     direccion: usuario?.direccion || '',
     ciudad: '',
     telefono: usuario?.telefono || '',
-    banco: '',
     tipo_persona: 'natural',
     documento: '',
   });
@@ -68,14 +58,10 @@ const Checkout = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const { nombre, direccion, ciudad, telefono, banco, documento } = form;
+    const { nombre, direccion, ciudad, telefono, documento } = form;
 
     if (!nombre.trim() || !direccion.trim() || !ciudad.trim() || !telefono.trim()) {
       setError('Completa todos los campos de dirección de envío.');
-      return;
-    }
-    if (!banco) {
-      setError('Selecciona tu banco PSE.');
       return;
     }
     if (!documento.trim()) {
@@ -87,28 +73,60 @@ const Checkout = () => {
     setError('');
 
     try {
+      // 1. Crear pedido en el backend
       const { data } = await api.post('/pedidos', {
         items: items.map((i) => ({ producto_id: i.id, cantidad: i.cantidad })),
         direccion_envio: `${nombre.trim()} — ${direccion.trim()}, ${ciudad.trim()} — Tel: ${telefono.trim()}`,
-        metodo_pago: `PSE - ${banco}`,
+        metodo_pago: 'Wompi',
       });
 
-      setPedidoCreado(true);
-      vaciarCarrito();
+      const { numero_pedido, total: montoPedido } = data.pedido;
+      const montoTotal = Number(montoPedido) + envio;
 
-      if (data.pse_url) {
-        // T-067: redirigir al portal PSE simulado (sale de la SPA)
-        window.location.href = data.pse_url;
-      } else {
-        navigate('/resultado-pago', {
-          state: { numero_pedido: data.pedido.numero_pedido, total: data.pedido.total },
-        });
-      }
+      // 2. Obtener firma de integridad (WOMPI_INTEGRITY_SECRET nunca sale del backend)
+      const { data: firmaData } = await api.post('/wompi/firma', {
+        referencia: numero_pedido,
+        monto: montoTotal,
+        moneda: 'COP',
+      });
+
+      // 3. Abrir widget de Wompi
+      setEnviando(false);
+
+      const checkout = new window.WidgetCheckout({
+        currency: 'COP',
+        amountInCents: firmaData.montoEnCentavos,
+        reference: numero_pedido,
+        publicKey: import.meta.env.VITE_WOMPI_PUBLIC_KEY,
+        signature: { integrity: firmaData.firma },
+        redirectUrl: 'https://strooke.vercel.app/resultado-pago',
+        customerData: {
+          email: usuario.correo,
+          fullName: usuario.nombre,
+          phoneNumber: form.telefono,
+          phoneNumberPrefix: '+57',
+          legalId: form.documento,
+          legalIdType: form.tipo_persona === 'natural' ? 'CC' : 'NIT',
+        },
+        shippingAddress: {
+          addressLine1: form.direccion,
+          city: form.ciudad,
+          phoneNumber: form.telefono,
+          region: form.ciudad,
+          country: 'CO',
+        },
+      });
+
+      // Wompi redirige solo a redirectUrl — solo limpiamos el carrito aquí
+      checkout.open(() => {
+        setPedidoCreado(true);
+        vaciarCarrito();
+      });
+
     } catch (err) {
       setError(
         err.response?.data?.error || 'Error al procesar el pedido. Inténtalo de nuevo.'
       );
-    } finally {
       setEnviando(false);
     }
   };
@@ -168,37 +186,12 @@ const Checkout = () => {
                 </div>
               </section>
 
-              {/* Método de pago PSE */}
+              {/* Datos de facturación */}
               <section>
                 <h2 className="text-xs tracking-[0.25em] uppercase font-semibold mb-5 pb-3 border-b border-gray-100">
-                  Método de Pago — PSE
+                  Datos de Facturación
                 </h2>
                 <div className="space-y-5">
-
-                  {/* Banco */}
-                  <div>
-                    <label className="block text-xs tracking-[0.15em] uppercase text-gray-400 mb-1.5">
-                      Banco
-                    </label>
-                    <div className="relative">
-                      <select
-                        name="banco"
-                        value={form.banco}
-                        onChange={handleChange}
-                        className="w-full border border-gray-200 px-4 py-3 text-sm focus:outline-none focus:border-black transition-colors bg-white appearance-none pr-10"
-                      >
-                        <option value="">Selecciona tu banco</option>
-                        {BANCOS.map((b) => (
-                          <option key={b} value={b}>
-                            {b}
-                          </option>
-                        ))}
-                      </select>
-                      <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-xs">
-                        ▾
-                      </span>
-                    </div>
-                  </div>
 
                   {/* Tipo de persona */}
                   <div>
@@ -207,7 +200,7 @@ const Checkout = () => {
                     </label>
                     <div className="flex gap-8">
                       {[
-                        { value: 'natural', label: 'Natural' },
+                        { value: 'natural',  label: 'Natural' },
                         { value: 'juridica', label: 'Jurídica' },
                       ].map(({ value, label }) => (
                         <label
@@ -255,17 +248,13 @@ const Checkout = () => {
                       src={item.imagen_url || FALLBACK_IMG}
                       alt={item.nombre}
                       className="w-16 h-16 object-cover bg-gray-50 flex-shrink-0"
-                      onError={(e) => {
-                        e.target.src = FALLBACK_IMG;
-                      }}
+                      onError={(e) => { e.target.src = FALLBACK_IMG; }}
                     />
                     <div className="flex-1 min-w-0">
                       <p className="text-xs tracking-wider uppercase leading-tight line-clamp-2">
                         {item.nombre}
                       </p>
-                      <p className="text-xs text-gray-400 mt-1">
-                        Cant. {item.cantidad}
-                      </p>
+                      <p className="text-xs text-gray-400 mt-1">Cant. {item.cantidad}</p>
                     </div>
                     <p className="text-sm tabular-nums font-medium whitespace-nowrap self-center">
                       {formatCOP(item.precio * item.cantidad)}
@@ -284,9 +273,7 @@ const Checkout = () => {
                   <span className="text-gray-500 uppercase">Envío</span>
                   <span>
                     {envio === 0 ? (
-                      <span className="text-green-700 text-xs uppercase tracking-wider">
-                        Gratis
-                      </span>
+                      <span className="text-green-700 text-xs uppercase tracking-wider">Gratis</span>
                     ) : (
                       <span className="tabular-nums">{formatCOP(envio)}</span>
                     )}
@@ -300,7 +287,7 @@ const Checkout = () => {
                 </div>
               </div>
 
-              {/* Mensaje de error */}
+              {/* Error */}
               {error && (
                 <div className="mt-5 px-4 py-3 border border-red-200 bg-red-50 text-red-700 text-xs tracking-wide leading-relaxed">
                   {error}
@@ -313,10 +300,10 @@ const Checkout = () => {
                 disabled={enviando}
                 className="mt-6 w-full bg-black text-white text-xs tracking-[0.25em] uppercase py-4 hover:bg-gray-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {enviando ? 'Procesando...' : 'Ir a PSE'}
+                {enviando ? 'Procesando...' : 'Pagar con Wompi'}
               </button>
               <p className="mt-3 text-center text-xs text-gray-400 tracking-wide">
-                Serás redirigido al portal de tu banco
+                Pago seguro con tarjeta, PSE o Nequi
               </p>
             </div>
           </div>

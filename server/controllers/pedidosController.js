@@ -1,7 +1,6 @@
 const { Op } = require('sequelize');
 const { sequelize, Pedido, DetallePedido, Producto, HistorialEnvio } = require('../models');
 
-const BACKEND_URL = process.env.BACKEND_URL || `http://localhost:${process.env.PORT || 3001}`;
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
 
 const ESTADOS_VALIDOS = ['pendiente', 'en_preparacion', 'enviado', 'en_camino', 'entregado', 'cancelado'];
@@ -125,11 +124,8 @@ const crearPedido = async (req, res) => {
 
     await transaction.commit();
 
-    const pse_url = `${BACKEND_URL}/api/pedidos/pse-callback?ref=${numero_pedido}&result=pending`;
-
     return res.status(201).json({
       mensaje: 'Pedido creado exitosamente',
-      pse_url,
       pedido: {
         id: pedido.id,
         numero_pedido: pedido.numero_pedido,
@@ -321,4 +317,5 @@ const getMisPedidos = async (req, res) => {
   }
 };
 
-module.exports = { crearPedido, pseCallback, getEstadoPedido, actualizarEstadoPedido, getMisPedidos };
+// pseCallback eliminado — reemplazado por webhookWompi en webhookRoutes
+module.exports = { crearPedido, getEstadoPedido, actualizarEstadoPedido, getMisPedidos };

@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { useLocation, useSearchParams, Link, Navigate } from 'react-router-dom';
 import { CheckCircle, Clock, XCircle } from 'lucide-react';
 
@@ -25,7 +26,7 @@ const ESTADOS = {
     iconoClass: 'text-amber-500',
     titulo: 'Pago en Proceso',
     subtitulo:
-      'Tu transacción PSE está siendo verificada por tu banco. Te notificaremos por correo cuando se confirme.',
+      'Tu transacción está siendo verificada. Te notificaremos por correo cuando se confirme.',
     mostrarRef: true,
     botones: [
       { label: 'Ver estado', href: (ref) => `/seguimiento/${ref}`, primario: true },
@@ -46,17 +47,55 @@ const ESTADOS = {
   },
 };
 
+// Wompi devuelve APPROVED / PENDING / DECLINED / ERROR / VOIDED
+const WOMPI_STATUS_MAP = {
+  APPROVED: 'approved',
+  PENDING:  'pending',
+  DECLINED: 'rejected',
+  ERROR:    'rejected',
+  VOIDED:   'rejected',
+};
+
 const ResultadoPago = () => {
   const { state } = useLocation();
   const [params] = useSearchParams();
 
-  // Fuente 1: URL params — viene del callback PSE (?result=X&ref=ORD-XXX)
-  // Fuente 2: router state — viene de navegación directa desde Checkout (fallback)
-  const result = params.get('result') || (state?.numero_pedido ? 'approved' : null);
-  const ref = params.get('ref') || state?.numero_pedido || null;
-  const totalPagado = state?.total || null;
+  const wompiId = params.get('id');
 
-  // Sin ninguna fuente válida: redirigir al inicio
+  // Estado inicial: si no viene ?id usamos los params clásicos (?result y ?ref)
+  const [result, setResult] = useState(
+    !wompiId ? (params.get('result') || (state?.numero_pedido ? 'approved' : null)) : null
+  );
+  const [ref, setRef] = useState(
+    !wompiId ? (params.get('ref') || state?.numero_pedido || null) : null
+  );
+  const [totalPagado, setTotalPagado] = useState(state?.total || null);
+  const [cargando, setCargando] = useState(!!wompiId);
+
+  useEffect(() => {
+    if (!wompiId) return;
+
+    fetch(`https://sandbox.wompi.co/v1/transactions/${wompiId}`)
+      .then((r) => r.json())
+      .then(({ data }) => {
+        setResult(WOMPI_STATUS_MAP[data?.status] ?? 'rejected');
+        setRef(data?.reference || params.get('reference') || null);
+        if (data?.amount_in_cents) {
+          setTotalPagado(data.amount_in_cents / 100);
+        }
+      })
+      .catch(() => setResult('rejected'))
+      .finally(() => setCargando(false));
+  }, [wompiId]);
+
+  if (cargando) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black" />
+      </div>
+    );
+  }
+
   if (!result || !ESTADOS[result]) return <Navigate to="/" replace />;
 
   const { Icono, iconoClass, titulo, subtitulo, mostrarRef, botones } = ESTADOS[result];
